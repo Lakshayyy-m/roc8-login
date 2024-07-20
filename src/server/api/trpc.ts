@@ -6,12 +6,15 @@
  * TL;DR - This is where all the tRPC server stuff is created and plugged in. The pieces you will
  * need to use are documented accordingly near the end.
  */
-import { initTRPC } from "@trpc/server";
-import { NextRequest, NextResponse } from "next/server";
+import { initTRPC, TRPCError } from "@trpc/server";
+import { type NextRequest, type NextResponse } from "next/server";
+import { cookies } from "next/headers";
 import superjson from "superjson";
 import { ZodError } from "zod";
+import jwt from "jsonwebtoken";
 
 import { db } from "~/server/db";
+import { env } from "~/env";
 
 /**
  * 1. CONTEXT
@@ -79,6 +82,55 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
+const getUserMiddleware = t.middleware(async ({ ctx, next }) => {
+  const { db } = ctx;
+  const cookieStore = cookies();
+  const token = cookieStore.get("accessToken");
+
+  if (!token) {
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+
+  let decodedToken;
+
+  try {
+    decodedToken = jwt.verify(token.value, env.ACCESS_TOKEN_SECRET) as {
+      name: string;
+      email: string;
+      password: string;
+      id: number;
+    };
+  } catch (error) {
+    console.log(error);
+    if (error instanceof jwt.TokenExpiredError) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+  }
+
+  try {
+    const user = await db.user.findUnique({
+      where: { email: decodedToken?.email },
+      select: {
+        name: true,
+        email: true,
+        id: true,
+        password: true,
+      },
+    });
+
+    if (!user) {
+      throw new TRPCError({ code: "UNAUTHORIZED" });
+    }
+
+    user.password = "";
+
+    return next({ ctx: { ...ctx, user } });
+  } catch (error) {
+    console.log(error);
+    throw new TRPCError({ code: "UNAUTHORIZED" });
+  }
+});
+
 /**
  * Public (unauthenticated) procedure
  *
@@ -86,4 +138,5 @@ export const createTRPCRouter = t.router;
  * guarantee that a user querying is authorized, but you can still access user session data if they
  * are logged in.
  */
+export const userProcedure = t.procedure.use(getUserMiddleware);
 export const publicProcedure = t.procedure;
