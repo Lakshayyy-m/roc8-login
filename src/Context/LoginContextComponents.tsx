@@ -34,10 +34,12 @@ export const LoginContext = React.createContext<LoginContextType>({
   },
 });
 
+//Login Context provider
 export const LoginContextProvider = ({ children }: { children: ReactNode }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(true);
   const [user, setUser] = useState<undefined | z.infer<typeof userSchema>>();
 
+  //Checking if user is logged in before rendering
   useLayoutEffect(() => {
     const check = async () => {
       const response = await checkAuth();

@@ -1,5 +1,5 @@
 "use client";
-import { UseMutateFunction } from "@tanstack/react-query";
+import { type UseMutateFunction } from "@tanstack/react-query";
 import React from "react";
 import { toast } from "sonner";
 import { Button } from "~/components/ui/button";
@@ -12,6 +12,7 @@ import {
 const OtpPage = ({
   verifyOtp,
   requiredOtp,
+  email,
 }: {
   verifyOtp: UseMutateFunction<
     {
@@ -31,15 +32,16 @@ const OtpPage = ({
     unknown
   >;
   requiredOtp: number;
+  email: string;
 }) => {
   const [otp, setOtp] = React.useState<number | undefined>(undefined);
-
+  const emailToShow = email.split("@");
   return (
     <section className="flex min-h-[calc(100vh-144px)] w-screen items-start justify-center pb-10 pt-20">
       <div className="flex w-[576px] flex-col items-center justify-center gap-4 rounded-2xl border border-[#c1c1c1] p-10">
         <h1 className="text-3xl font-semibold">Verify your email</h1>
         <p className="max-w-[334px] pb-7 text-center text-base font-medium">
-          Enter the 8 digit code you have received on swa***@gmail.com
+          {`Enter the 8 digit code you have received on ${emailToShow[0]?.substring(0, 3)}***@${emailToShow[1]}`}
         </p>
         <div>
           <p className="w-full text-left text-black">Code</p>

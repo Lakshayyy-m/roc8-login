@@ -82,6 +82,7 @@ export const createCallerFactory = t.createCallerFactory;
  */
 export const createTRPCRouter = t.router;
 
+//Middleware for checking if user is logged in and then passing the user to the context for further access
 const getUserMiddleware = t.middleware(async ({ ctx, next }) => {
   const { db } = ctx;
   const cookieStore = cookies();

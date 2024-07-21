@@ -1,4 +1,5 @@
 "use client";
+import { Loader } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Checkbox } from "~/components/ui/checkbox";
@@ -13,7 +14,8 @@ export default function Home() {
   >([]);
 
   //Fetching all and user categories
-  const { data: userCategories } = api.user.getCategories.useQuery();
+  const { data: userCategories, isLoading: isLoadingForUser } =
+    api.user.getCategories.useQuery();
   const { data: allCategories, isLoading } = api.category.getAll.useQuery();
   const currentCatgories = allCategories?.slice(
     pageNumber * 6,
@@ -144,27 +146,37 @@ export default function Home() {
         </div>
         <div className="my-8 flex w-full flex-col justify-start gap-5 font-medium">
           <h3 className="text-xl">My saved interests</h3>
-          {currentCatgories?.map((category) => (
-            <div
-              className="flex items-center justify-start gap-5"
-              key={category.id}
-            >
-              <Checkbox
-                id={category.id.toString()}
-                checked={checkExistence(category.id)}
-                onCheckedChange={(checked) => {
-                  if (checked) {
-                    addCategory(category.id);
-                  } else {
-                    removeCategory(category.id);
-                  }
-                }}
-              />
-              <label htmlFor={category.id.toString()}>{category.name}</label>
+          {isLoadingForUser && (
+            <div className="flex w-full items-center justify-center">
+              <Loader className="animate-spin" />
             </div>
-          ))}
+          )}
+          {!isLoadingForUser &&
+            currentCatgories?.map((category) => (
+              <div
+                className="flex items-center justify-start gap-5"
+                key={category.id}
+              >
+                <Checkbox
+                  id={category.id.toString()}
+                  checked={checkExistence(category.id)}
+                  onCheckedChange={(checked) => {
+                    if (checked) {
+                      addCategory(category.id);
+                    } else {
+                      removeCategory(category.id);
+                    }
+                  }}
+                />
+                <label htmlFor={category.id.toString()}>{category.name}</label>
+              </div>
+            ))}
         </div>
-
+        {isLoading && (
+          <div className="flex w-full justify-center">
+            <Loader className="animate-spin" />
+          </div>
+        )}
         {!isLoading && (
           <div className="flex w-full justify-start">
             {pageNumber === 1 ? (

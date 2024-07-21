@@ -6,12 +6,14 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import { env } from "~/env";
 
+//Schema for validating user data
 const userSchema = z.object({
   name: z.string().min(2).optional(),
   email: z.string().email(),
   password: z.string().min(6),
 });
 
+//Fucntion for login user
 export const loginUser = async (credentials: {
   email: string;
   password: string;
@@ -79,6 +81,7 @@ export const loginUser = async (credentials: {
   }
 };
 
+//Function for logout user, not implemented due to figma design not containing logout button
 export const logoutUser = async (user: {
   id?: number;
   name: string;
@@ -104,13 +107,12 @@ export const logoutUser = async (user: {
   return { message: "You are successfully logged out!", status: 200 };
 };
 
-export const continueSignUp = async (
-  credentials: {
-    email: string;
-    name: string;
-    password: string;
-  },
-) => {
+//function for conitnuing signup after otp verification
+export const continueSignUp = async (credentials: {
+  email: string;
+  name: string;
+  password: string;
+}) => {
   const safePassword = await bcrypt.hash(
     credentials.password,
     +env.SALT_ROUNDS,
@@ -164,6 +166,7 @@ export const continueSignUp = async (
   };
 };
 
+//Function for signup user
 export const signUpUser = async (credentials: {
   email: string;
   name: string;
@@ -251,6 +254,7 @@ export const signUpUser = async (credentials: {
   }
 };
 
+//Function for checking if user is logged in
 export const checkAuth = async () => {
   const cookieStore = cookies();
   const token = cookieStore.get("accessToken");

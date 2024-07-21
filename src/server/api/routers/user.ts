@@ -2,6 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, userProcedure } from "../trpc";
 
 export const userRouter = createTRPCRouter({
+  //Fetching all user categories
   getCategories: userProcedure.query(async ({ ctx }) => {
     const { db, user } = ctx;
     const categories = await db.user.findUnique({
@@ -10,6 +11,7 @@ export const userRouter = createTRPCRouter({
     });
     return categories?.categories;
   }),
+  //Adding a category for a user
   addCategory: userProcedure
     .input(z.number())
     .mutation(async ({ ctx, input }) => {
@@ -19,6 +21,7 @@ export const userRouter = createTRPCRouter({
         data: { categories: { connect: { id: input } } },
       });
     }),
+  //Removing a category for a user
   removeCategory: userProcedure
     .input(z.number())
     .mutation(async ({ ctx, input }) => {

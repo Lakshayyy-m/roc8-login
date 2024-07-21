@@ -10,7 +10,9 @@ import { useLogin } from "~/Context/loginContext";
 import OtpPage from "~/components/Otp";
 import emailjs from "@emailjs/browser";
 import { env } from "~/env";
+import { Loader } from "lucide-react";
 
+//Schema for validating user data
 const userSchema = z.object({
   name: z
     .string()
@@ -24,6 +26,7 @@ const userSchema = z.object({
 
 const SignIn = () => {
   const [isLogin, setIsLogin] = useState(true);
+  const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState<number | undefined>(undefined);
   const [stateFormData, setStateFormData] = useState<
     { email: string; name: string; password: string } | undefined
@@ -31,7 +34,7 @@ const SignIn = () => {
   const router = useRouter();
   const { setIsLoggedIn, setUser } = useLogin();
   //Logging in or signing up
-  const { mutate } = useMutation({
+  const { mutate, isPending } = useMutation({
     mutationKey: ["login"],
     mutationFn: async (data: z.infer<typeof userSchema>) => {
       if (isLogin) {
@@ -46,6 +49,7 @@ const SignIn = () => {
           data as { name: string; email: string; password: string },
         );
         if (response.status !== 200) {
+          //Generating OTP and sending email
           if (response.status === 201) {
             const otp = Math.floor(10000000 + Math.random() * 90000000);
             emailjs.init({ publicKey: env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY });
@@ -58,7 +62,7 @@ const SignIn = () => {
                 otp: otp,
               },
             );
-            
+
             setStateFormData(response.credentials);
             setOtp(otp);
             return undefined;
@@ -81,6 +85,7 @@ const SignIn = () => {
     },
   });
 
+  //Submitting form function
   const submitForm = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
 
@@ -125,7 +130,11 @@ const SignIn = () => {
   return (
     <section className="flex min-h-[calc(100vh-144px)] w-screen items-center justify-center pb-10 pt-20">
       {otp ? (
-        <OtpPage verifyOtp={verifyOtp} requiredOtp={otp} />
+        <OtpPage
+          verifyOtp={verifyOtp}
+          requiredOtp={otp}
+          email={stateFormData!.email}
+        />
       ) : (
         <form
           className="flex w-[576px] flex-col items-center justify-center gap-4 rounded-2xl border border-[#c1c1c1] p-10"
@@ -162,15 +171,32 @@ const SignIn = () => {
           </label>
           <label className="justify-centert flex w-full flex-col items-center gap-4 text-base">
             <p className="w-full text-left font-semibold">Password</p>
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter"
-              className="w-full rounded-md border border-[#c1c1c1] p-4 focus:outline-none"
-            />
+            <div className="relative w-full">
+              <input
+                type={showPassword ? "text" : "password"}
+                name="password"
+                placeholder="Enter"
+                className="w-full rounded-md border border-[#c1c1c1] p-4 focus:outline-none"
+              />
+              <Button
+                className="absolute right-0 top-[6px] bg-transparent text-base text-black hover:bg-transparent hover:underline"
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+              >
+                {showPassword ? "Hide" : "Show"}
+              </Button>
+            </div>
           </label>
           <Button className="mt-10 h-[56px] w-full text-base">
-            {isLogin ? "Login" : "Create  account"}
+            {isPending ? (
+              <div className="flex w-full items-center justify-center">
+                <Loader className="animate-spin" />
+              </div>
+            ) : isLogin ? (
+              "Login"
+            ) : (
+              "Create  account"
+            )}
           </Button>
 
           <div className="mt-10 flex w-full items-center justify-center">
